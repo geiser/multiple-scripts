@@ -1,0 +1,7 @@
+# Ignore everything:
+*
+
+# List of files to be included
+!README.md
+!.gitignore
+
