@@ -1,0 +1,35 @@
+#!/bin/sh
+now=$(date +"%Y-%m-%d")
+NAME=OpenShift$now
+LOCALDIR=/home/username/backup/$NAME
+rm -rf $LOCALDIR
+mkdir -p $LOCALDIR
+cd $LOCALDIR
+         
+backupSql() {
+  # TODO: Get all the environment variables in on shot
+  scp $1:mysql/env/OPENSHIFT_MYSQL_DB_USERNAME .
+  scp $1:mysql/env/OPENSHIFT_MYSQL_DB_PASSWORD .
+  scp $1:.env/OPENSHIFT_MYSQL_DB_HOST .
+  scp $1:.env/OPENSHIFT_MYSQL_DB_PORT .
+  local username="`cat OPENSHIFT_MYSQL_DB_USERNAME`"
+  local password="`cat OPENSHIFT_MYSQL_DB_PASSWORD`"
+  local host="`cat OPENSHIFT_MYSQL_DB_HOST`"
+  local port="`cat OPENSHIFT_MYSQL_DB_PORT`"
+
+  ssh $1 "rm -f app-root/data/$2.sql ; mysqldump --user="$username" --password="$password" --host="$host" --port="$port" --complete-insert $2 > app-root/data/$2.sql"
+  scp $1:app-root/data/$2.sql .
+
+  rm OPENSHIFT_MYSQL_DB_USERNAME
+  rm OPENSHIFT_MYSQL_DB_PASSWORD
+  rm OPENSHIFT_MYSQL_DB_HOST
+  rm OPENSHIFT_MYSQL_DB_PORT
+}
+
+backupSql "[SSH HOST]" "[APP NAME]"
+... (backup multiple apps at once by repeating the above)
+        
+#cd ..
+#tar -zcvf $NAME.tar.gz $NAME
+#rm -rf $NAME
+

@@ -1,7 +1,15 @@
-# Ignore everything:
+# Ignore everything
 *
-
-# List of files to be included
+# Tracking files
 !README.md
 !.gitignore
+!.vimrc
+!.speedswapper
+!.bashrc
+
+!/Applications
+/Applications/*
+!/Applications/bin
+/Applications/bin/*
+!/Applications/bin/rhc-backup
 
