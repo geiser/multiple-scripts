@@ -2,11 +2,10 @@
 
 Config a new workstation
 
-  git init
-  git remote add origin git@github.com:geiser/multiple-scripts.git
-  git fetch -f origin
-  git checkout master
-
+    git init
+    git remote add origin git@github.com:geiser/multiple-scripts.git
+    git fetch -f origin
+    git checkout master
 
 Script rhc-backup 
 
