@@ -5,3 +5,5 @@ set hls
 set number
 set expandtab
 
+set tabpagemax=100
+

@@ -6,6 +6,9 @@ Config a new workstation
     git remote add origin git@github.com:geiser/multiple-scripts.git
     git fetch -f origin
     git checkout master
+    echo "if [ -f ~/.bashrc ]; then . ~/.bashrc; fi" > .bash_profile
+
+# scripts
 
 Script rhc-backup 
 
