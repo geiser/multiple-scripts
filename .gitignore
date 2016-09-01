@@ -11,7 +11,8 @@
 !/.vim/autoload/
 !/.vim/autoload/pathogen.vim
 !/.vim/bundle/
-!/.vim/bundle/vim-fireplace
+!.vim/bundle/vim-fireplace
+!.vim/bundle/vim-clojure-static
 
 !/Applications
 /Applications/*
