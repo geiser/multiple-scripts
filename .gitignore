@@ -15,6 +15,7 @@
 !.vim/bundle/vim-clojure-static
 !.vim/bundle/vim-clojure-highlight
 !.vim/bundle/vim-cljfmt
+!.vim/bundle/php.vim
 
 !/Applications
 /Applications/*
