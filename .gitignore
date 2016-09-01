@@ -10,6 +10,8 @@
 !/.vim/
 !/.vim/autoload/
 !/.vim/autoload/pathogen.vim
+!/.vim/bundle/
+!/.vim/bundle/vim-fireplace
 
 !/Applications
 /Applications/*
