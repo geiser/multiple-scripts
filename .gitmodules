@@ -7,3 +7,6 @@
 [submodule ".vim/bundle/vim-clojure-highlight"]
 	path = .vim/bundle/vim-clojure-highlight
 	url = https://github.com/guns/vim-clojure-highlight.git
+[submodule ".vim/bundle/vim-cljfmt"]
+	path = .vim/bundle/vim-cljfmt
+	url = https://github.com/venantius/vim-cljfmt.git

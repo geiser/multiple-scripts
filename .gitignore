@@ -14,6 +14,7 @@
 !.vim/bundle/vim-fireplace
 !.vim/bundle/vim-clojure-static
 !.vim/bundle/vim-clojure-highlight
+!.vim/bundle/vim-cljfmt
 
 !/Applications
 /Applications/*
