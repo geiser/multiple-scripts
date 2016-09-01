@@ -7,6 +7,10 @@
 !.speedswapper
 !.bashrc
 
+!/.vim/
+!/.vim/autoload/
+!/.vim/autoload/pathogen.vim
+
 !/Applications
 /Applications/*
 !/Applications/bin
