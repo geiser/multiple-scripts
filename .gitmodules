@@ -13,3 +13,6 @@
 [submodule ".vim/bundle/php.vim"]
 	path = .vim/bundle/php.vim
 	url = https://github.com/StanAngeloff/php.vim.git
+[submodule ".vim/bundle/vim-open-url"]
+	path = .vim/bundle/vim-open-url
+	url = https://github.com/dhruvasagar/vim-open-url.git

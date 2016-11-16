@@ -16,10 +16,11 @@
 !.vim/bundle/vim-clojure-highlight
 !.vim/bundle/vim-cljfmt
 !.vim/bundle/php.vim
+!.vim/bundle/vim-open-url
 
 !/Applications
 /Applications/*
 !/Applications/bin
 /Applications/bin/*
 !/Applications/bin/rhc-backup
-
+!/Applications/bin/google-backup

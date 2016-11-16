@@ -5,6 +5,7 @@ filetype plugin indent on
 set hls
 set number
 set expandtab
+set ruler
 
 set tabpagemax=100
 
