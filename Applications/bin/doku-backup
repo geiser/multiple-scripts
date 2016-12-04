@@ -1,0 +1,48 @@
+#!/bin/sh
+# Script to backup data & database from a Doku wiki
+#   doku-backup SSH_HOST SSH_DATADIR <param=value> ...
+# The optinal parameters <param=value> can be:
+# -p --port: port to connect with the SSH_HOST
+# -d --dest: backup location (default .)
+# --data-dest: path to restore data
+
+SSH_HOST=$1
+SSH_DATADIR=$2
+SSH_PORT=22
+BACKUP_DIR=$(pwd)
+DATA_RESTORE=false
+
+for i in "$@"; do
+    case $i in
+        -p=*|--port=*)
+        SSH_PORT="${i#*=}"
+        shift
+        ;;
+        -d=*|--dest=*)
+        BACKUP_DIR="${i#*=}"
+        shift
+        ;;
+        --data-dest=*)
+        DATA_RESTORE=true
+        data_dest="${i#*=}"
+        shift
+        ;;
+    esac
+done
+now=$(date +"%Y%m%d-%s")
+
+[ ! -d ${BACKUP_DIR} ] && mkdir -p ${BACKUP_DIR}
+cd ${BACKUP_DIR}
+
+# Backup data
+ssh -p $SSH_PORT $SSH_HOST "cd ${SSH_DATADIR}; tar -cpzf data-${now}.tar.gz --exclude=data-${now}.tar.gz data conf"
+scp -P $SSH_PORT $SSH_HOST:$SSH_DATADIR/data-${now}.tar.gz .
+ssh -p $SSH_PORT $SSH_HOST "rm ${SSH_DATADIR}/data-${now}.tar.gz"
+
+# Restore instantly data
+if [ "$DATA_RESTORE" = true ] ; then
+    [ ! -d ${data_dest} ] && mkdir -p ${data_dest}
+    echo "Restoring data in ${data_dest} ..."
+    tar zxf ${BACKUP_DIR}/data-${now}.tar.gz -C ${data_dest} --strip-components=1
+fi
+

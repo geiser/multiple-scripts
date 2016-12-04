@@ -24,3 +24,4 @@
 /Applications/bin/*
 !/Applications/bin/rhc-backup
 !/Applications/bin/moodle-backup
+!/Applications/bin/doku-backup
