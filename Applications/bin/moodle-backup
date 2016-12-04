@@ -1,0 +1,90 @@
+#!/bin/sh
+# Script to backup data & database from a Moodle site
+#   moodle-backup SSH_HOST SSH_DBUSER SSH_DBPASS SSH_DATADIR <param=value> ...
+# The optinal parameters <param=value> can be:
+# -p --port: port to connect with the SSH_HOST
+# -d --dest: backup location (default .)
+# --db-user: user to restore DB (default MySQL)
+# --db-pass: password to restore DB (default MySQL)
+# --data-dest: path to restore data
+# --databases: backup and restore only these databases
+
+SSH_HOST=$1
+SSH_DBUSER=$2
+SSH_DBPASS=$3
+SSH_DATADIR=$4
+SSH_PORT=22
+BACKUP_DIR=$(pwd)
+DB_RESTORE=false
+DATA_RESTORE=false
+DATABASES=false
+
+for i in "$@"; do
+    case $i in
+        -p=*|--port=*)
+        SSH_PORT="${i#*=}"
+        shift
+        ;;
+        -d=*|--dest=*)
+        BACKUP_DIR="${i#*=}"
+        shift
+        ;;
+        --db-user=*)
+        DB_RESTORE=true
+        db_user="${i#*=}"
+        shift
+        ;;
+        --db-pass=*)
+        DB_RESTORE=true
+        db_pass="${i#*=}"
+        shift
+        ;;
+        --data-dest=*)
+        DATA_RESTORE=true
+        data_dest="${i#*=}"
+        shift
+        ;;
+        --databases=*)
+        DATABASES="${i#*=}"
+        shift
+        ;;
+    esac
+done
+
+now=$(date +"%Y%m%d-%s")
+BACKUP_DIR=${BACKUP_DIR}
+
+[ ! -d ${BACKUP_DIR} ] && mkdir -p ${BACKUP_DIR}
+cd ${BACKUP_DIR}
+
+# Backup data
+ssh -p $SSH_PORT $SSH_HOST "cd ${SSH_DATADIR}; sudo tar -cpzf data-${now}.tar.gz --exclude=data-${now}.tar.gz ."
+scp -P $SSH_PORT $SSH_HOST:$SSH_DATADIR/data-${now}.tar.gz .
+ssh -p $SSH_PORT $SSH_HOST "sudo rm ${SSH_DATADIR}/data-${now}.tar.gz"
+
+# Backup databases
+dump_opt="-u ${SSH_DBUSER} -p${SSH_DBPASS}"
+if [ "$DATABASES" = false ] ; then
+    dump_opt="${dump_opt} --all-databases"
+else
+    dump_opt="${dump_opt} --databases ${DATABASES}"
+fi
+
+ssh -p $SSH_PORT $SSH_HOST "mysqldump ${dump_opt} | gzip -9 > ${SSH_DATADIR}/db-${now}.sql.gz"
+scp -P $SSH_PORT $SSH_HOST:$SSH_DATADIR/db-${now}.sql.gz .
+ssh -p $SSH_PORT $SSH_HOST "rm -f ${SSH_DATADIR}/db-${now}.sql.gz"
+
+# Restore instantly data
+if [ "$DATA_RESTORE" = true ] ; then
+    [ ! -d ${data_dest} ] && mkdir -p ${data_dest}
+    echo "Restoring data in ${data_dest} ..."
+    tar zxf ${BACKUP_DIR}/data-${now}.tar.gz -C ${data_dest} --strip-components=1
+fi
+
+# Restore instantly sql
+mysql_opt="-u ${db_user} -p${db_pass}"
+if [ "$DB_RESTORE" = true ] ; then
+    echo "Restoring database using ${db_user}@localhost ..."
+    gunzip < ${BACKUP_DIR}/db-${now}.sql.gz | mysql ${mysql_opt}
+fi
+

@@ -23,4 +23,4 @@
 !/Applications/bin
 /Applications/bin/*
 !/Applications/bin/rhc-backup
-!/Applications/bin/google-backup
+!/Applications/bin/moodle-backup
