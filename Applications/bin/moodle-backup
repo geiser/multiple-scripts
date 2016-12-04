@@ -50,17 +50,15 @@ for i in "$@"; do
         ;;
     esac
 done
-
 now=$(date +"%Y%m%d-%s")
-BACKUP_DIR=${BACKUP_DIR}
 
 [ ! -d ${BACKUP_DIR} ] && mkdir -p ${BACKUP_DIR}
 cd ${BACKUP_DIR}
 
 # Backup data
-ssh -p $SSH_PORT $SSH_HOST "cd ${SSH_DATADIR}; sudo tar -cpzf data-${now}.tar.gz --exclude=data-${now}.tar.gz ."
+ssh -p $SSH_PORT $SSH_HOST "cd ${SSH_DATADIR}; tar -cpzf data-${now}.tar.gz --exclude=data-${now}.tar.gz ."
 scp -P $SSH_PORT $SSH_HOST:$SSH_DATADIR/data-${now}.tar.gz .
-ssh -p $SSH_PORT $SSH_HOST "sudo rm ${SSH_DATADIR}/data-${now}.tar.gz"
+ssh -p $SSH_PORT $SSH_HOST "rm ${SSH_DATADIR}/data-${now}.tar.gz"
 
 # Backup databases
 dump_opt="-u ${SSH_DBUSER} -p${SSH_DBPASS}"
