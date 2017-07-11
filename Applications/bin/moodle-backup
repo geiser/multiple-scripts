@@ -56,9 +56,9 @@ now=$(date +"%Y%m%d-%s")
 cd ${BACKUP_DIR}
 
 # Backup data
-ssh -p $SSH_PORT $SSH_HOST "cd ${SSH_DATADIR}; tar -cpzf data-${now}.tar.gz --exclude=data-${now}.tar.gz ."
+ssh -p $SSH_PORT $SSH_HOST "rm -f ${SSH_DATADIR}/data-*.tar.gz; rm -f ${SSH_DATADIR}/db-*.sql.gz; cd ${SSH_DATADIR}; tar -cpzf data-${now}.tar.gz --exclude=data-${now}.tar.gz ."
 scp -P $SSH_PORT $SSH_HOST:$SSH_DATADIR/data-${now}.tar.gz .
-ssh -p $SSH_PORT $SSH_HOST "rm ${SSH_DATADIR}/data-${now}.tar.gz"
+ssh -p $SSH_PORT $SSH_HOST "rm -f ${SSH_DATADIR}/data-*.tar.gz"
 
 # Backup databases
 dump_opt="-u ${SSH_DBUSER} -p${SSH_DBPASS}"
@@ -68,12 +68,13 @@ else
     dump_opt="${dump_opt} --databases ${DATABASES}"
 fi
 
-ssh -p $SSH_PORT $SSH_HOST "mysqldump ${dump_opt} | gzip -9 > ${SSH_DATADIR}/db-${now}.sql.gz"
+ssh -p $SSH_PORT $SSH_HOST "rm -f ${SSH_DATADIR}/data-*.tar.gz; rm -f ${SSH_DATADIR}/db-*.sql.gz; mysqldump ${dump_opt} | gzip -9 > ${SSH_DATADIR}/db-${now}.sql.gz"
 scp -P $SSH_PORT $SSH_HOST:$SSH_DATADIR/db-${now}.sql.gz .
-ssh -p $SSH_PORT $SSH_HOST "rm -f ${SSH_DATADIR}/db-${now}.sql.gz"
+ssh -p $SSH_PORT $SSH_HOST "rm -f ${SSH_DATADIR}/db-*.sql.gz"
 
 # Restore instantly data
 if [ "$DATA_RESTORE" = true ] ; then
+    rm -vRf ${data_dest}
     [ ! -d ${data_dest} ] && mkdir -p ${data_dest}
     echo "Restoring data in ${data_dest} ..."
     tar zxf ${BACKUP_DIR}/data-${now}.tar.gz -C ${data_dest} --strip-components=1
