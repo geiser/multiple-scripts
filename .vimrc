@@ -9,7 +9,9 @@ set ruler
 
 set tabpagemax=100
 
+autocmd Filetype c setlocal ts=4 sw=4 expandtab autoindent smartindent
 autocmd Filetype javascript setlocal ts=4 sw=4 expandtab
+autocmd Filetype java setlocal ts=4 sw=4 expandtab
 autocmd Filetype php setlocal ts=4 sw=4 expandtab
 
 function! PhpSyntaxOverride()
