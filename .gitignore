@@ -25,4 +25,5 @@
 !/Applications/bin/rhc-backup
 !/Applications/bin/moodle-backup
 !/Applications/bin/doku-backup
+!/Applications/bin/redmine-backup
 .Rproj.user
