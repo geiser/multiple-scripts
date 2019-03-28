@@ -1,0 +1,109 @@
+#!/bin/sh
+# Script to backup data & database from redmine
+#   redmine-backup SSH_HOST SSH_DBUSER SSH_DBPASS SSH_REDMINE <param=value> ...
+# The optinal parameters <param=value> can be:
+# -p --port: port to connect with the SSH_HOST
+# -d --dest: backup location (default .)
+# --ssh-pass: password to connect via ssh
+# --db-user: user to restore DB
+# --db-pass: password to restore DB
+# --redmine-path: path of local redmine to restore
+# --database: database of local and remote redmine
+
+SSH_HOST=$1
+SSH_DBUSER=$2
+SSH_DBPASS=$3
+SSH_REDMINE=$4
+
+SSH_PORT=22
+BACKUP_DIR=$(pwd)
+DB_RESTORE=false
+DATA_RESTORE=false
+DATABASE=false
+SSHPASS=false
+
+for i in "$@"; do
+    case $i in
+        -p=*|--port=*)
+        SSH_PORT="${i#*=}"
+        shift
+        ;;
+        -d=*|--dest=*)
+        BACKUP_DIR="${i#*=}"
+        shift
+        ;;
+        --db-user=*)
+        DB_RESTORE=true
+        db_user="${i#*=}"
+        shift
+        ;;
+        --db-pass=*)
+        DB_RESTORE=true
+        db_pass="${i#*=}"
+        shift
+        ;;
+        --redmine-path=*)
+        DATA_RESTORE=true
+        data_dest="${i#*=}"
+        shift
+        ;;
+        --database=*)
+        DATABASE="${i#*=}"
+        shift
+        ;;
+        --ssh-pass=*)
+        SSHPASS="${i#*=}"
+        shift
+        ;;
+    esac
+done
+now=$(date +"%Y%m%d-%s")
+
+[ ! -d ${BACKUP_DIR} ] && mkdir -p ${BACKUP_DIR}
+cd ${BACKUP_DIR}
+
+# Backup data
+SSH_DATADIR="~/redmine-backup"
+SSH_COMMAND="rm -vRf ${SSH_DATADIR}; mkdir -vp ${SSH_DATADIR}; rm -vf ${SSH_DATADIR}/data-*.tar.gz; rm -vf ${SSH_DATADIR}/db-*.sql.gz; mkdir -vp ${SSH_DATADIR}/config; if [ -e ${SSH_REDMINE}/config/additional_environment.rb ]; then cp -vfp ${SSH_REDMINE}/config/additional_environment.rb ${SSH_DATADIR}/config/additional_environment.rb; fi; if [ -e ${SSH_REDMINE}/config/configuration.yml ]; then cp -vfp ${SSH_REDMINE}/config/configuration.yml ${SSH_DATADIR}/config/configuration.yml; fi; if [ -e ${SSH_REDMINE}/config/database.yml ]; then cp -vfp ${SSH_REDMINE}/config/database.yml ${SSH_DATADIR}/config/database.yml; fi; if [ -e ${SSH_REDMINE}/config/email.yml ]; then cp -vfp ${SSH_REDMINE}/config/email.yml ${SSH_DATADIR}/config/email.yml; fi; if [ -e ${SSH_REDMINE}/config/secrets.yml ]; then cp -vfp ${SSH_REDMINE}/config/secrets.yml ${SSH_DATADIR}/config/secrets.yml; fi; if [ -e ${SSH_REDMINE}/config/master.key ]; then cp -vfp ${SSH_REDMINE}/config/master.key ${SSH_DATADIR}/config/master.key; fi; mkdir -vp ${SSH_DATADIR}/config/initializers; if [ -e ${SSH_REDMINE}/config/initializers/session_store.rb ]; then cp -vfp ${SSH_REDMINE}/config/initializers/session_store.rb ${SSH_DATADIR}/config/initializers/session_store.rb; fi; if [ -e ${SSH_REDMINE}/config/initializers/secret_token.rb ]; then cp -vfp ${SSH_REDMINE}/config/initializers/secret_token.rb ${SSH_DATADIR}/config/initializers/secret_token.rb; fi; if [ -e ${SSH_REDMINE}/config/initializers/receiving-emails-redmine.rb ]; then cp -vfp ${SSH_REDMINE}/config/initializers/receiving-emails-redmine.rb ${SSH_DATADIR}/config/initializers/receiving-emails-redmine.rb; fi; if [ -e ${SSH_REDMINE}/config/initializers/secret_token.rb ]; then cp -vfp ${SSH_REDMINE}/config/initializers/secret_token.rb ${SSH_DATADIR}/config/initializers/secret_token.rb; fi; mkdir -vp ${SSH_DATADIR}/lib/redmine/scm/adapters/mercurial; if [ -e ${SSH_REDMINE}/lib/redmine/scm/adapters/mercurial/redminehelper.pyc ]; then cp -vfp ${SSH_REDMINE}/lib/redmine/scm/adapters/mercurial/redminehelper.pyc ${SSH_DATADIR}/lib/redmine/scm/adapters/mercurial/redminehelper.pyc; fi; if [ -e ${SSH_REDMINE}/lib/redmine/scm/adapters/mercurial/redminehelper.pyo ]; then cp -vfp ${SSH_REDMINE}/lib/redmine/scm/adapters/mercurial/redminehelper.pyo ${SSH_DATADIR}/lib/redmine/scm/adapters/mercurial/redminehelper.pyo; fi; mkdir -vp ${SSH_DATADIR}/files; cp -vRfp ${SSH_REDMINE}/files/* ${SSH_DATADIR}/files/; mkdir -vp ${SSH_DATADIR}/log; cp -vfp ${SSH_REDMINE}/log/*.log* ${SSH_DATADIR}/log/; [ -d ${SSH_REDMINE}/log/mongrel_debug ] && cp -vRfp ${SSH_REDMINE}/log/mongrel_debug ${SSH_DATADIR}/log/; mkdir -vp ${SSH_DATADIR}/db; if [ -e ${SSH_REDMINE}/db/schema.rb ]; then cp -vfp ${SSH_REDMINE}/db/schema.rb ${SSH_DATADIR}/db/schema.rb; fi; if [ -e ${SSH_REDMINE}/*.env ]; then cp -vfp ${SSH_REDMINE}/*.env ${SSH_DATADIR}/; fi; if [ -e ${SSH_REDMINE}/db/*.db ]; then cp -vfp ${SSH_REDMINE}/db/*.db ${SSH_DATADIR}/db/; fi; if [ -e ${SSH_REDMINE}/db/*.sqlite3 ]; then cp -vfp \$f ${SSH_DATADIR}/db/; fi; cd ${SSH_DATADIR}; tar -cpzf data-${now}.tar.gz --exclude=data-${now}.tar.gz ."
+if [ "$SSHPASS" = false ] ; then
+    ssh -p $SSH_PORT $SSH_HOST $SSH_COMMAND
+    scp -P $SSH_PORT $SSH_HOST:$SSH_DATADIR/data-${now}.tar.gz .
+    ssh -p $SSH_PORT $SSH_HOST "rm -vf ${SSH_DATADIR}/data-*.tar.gz"
+else
+    SSHPASS='${SSHPASS}' sshpass -e ssh -p $SSH_PORT $SSH_HOST $SSH_COMMAND
+    SSHPASS='${SSHPASS}' sshpass -e scp -P $SSH_PORT $SSH_HOST:$SSH_DATADIR/data-${now}.tar.gz .
+    SSHPASS='${SSHPASS}' sshpass -e ssh -p $SSH_PORT $SSH_HOST "rm -vf ${SSH_DATADIR}/data-*.tar.gz"
+fi
+
+# Backup postgresql database
+PGDATABASE="redmine_default"
+if [ "$DATABASE" = false ] ; then
+    PGDATABASE="redmine_default"
+else
+    PGDATABASE=${DATABASE}
+fi
+dump_opt="PGHOST=localhost PGUSER=${SSH_DBUSER} PGPASSWORD=${SSH_DBPASS} PGDATABASE=${PGDATABASE}"
+
+if [ "$SSHPASS" = false ] ; then
+    ssh -p $SSH_PORT $SSH_HOST "rm -vf ${SSH_DATADIR}/data-*.tar.gz; rm -vf ${SSH_DATADIR}/db-*.sql.gz; ${dump_opt} pg_dump -w -c | gzip -9 > ${SSH_DATADIR}/db-${now}.sql.gz"
+    scp -P $SSH_PORT $SSH_HOST:$SSH_DATADIR/db-${now}.sql.gz .
+    ssh -p $SSH_PORT $SSH_HOST "rm -f ${SSH_DATADIR}/db-*.sql.gz"
+else
+    SSHPASS='${SSHPASS}' sshpass -e ssh -p $SSH_PORT $SSH_HOST "rm -vf ${SSH_DATADIR}/data-*.tar.gz; rm -vf ${SSH_DATADIR}/db-*.sql.gz; ${dump_opt} pg_dump -w -c | gzip -9 > ${SSH_DATADIR}/db-${now}.sql.gz"
+    SSHPASS='${SSHPASS}' sshpass -e scp -P $SSH_PORT $SSH_HOST:$SSH_DATADIR/db-${now}.sql.gz .
+    SSHPASS='${SSHPASS}' sshpass -e ssh -p $SSH_PORT $SSH_HOST "rm -f ${SSH_DATADIR}/db-*.sql.gz"
+fi
+
+# Restore instantly data
+if [ "$DATA_RESTORE" = true ] ; then
+    [ ! -d ${data_dest} ] && mkdir -vfp ${data_dest}
+    echo "Restoring data in ${data_dest} ..."
+    tar zxf ${BACKUP_DIR}/data-${now}.tar.gz -C ${data_dest} --strip-components=1
+fi
+
+# Restore instantly postgresql
+postgresql_opt="PGHOST=localhost PGUSER=${db_user} PGPASSWORD=${db_pass}"
+if [ "$DB_RESTORE" = true ] ; then
+    echo "Restoring database using ${db_user}@localhost ..."
+    gunzip < ${BACKUP_DIR}/db-${now}.sql.gz | ${postgresql_opt} pg_restore -c -C -d ${PGDATABASE} 
+fi
